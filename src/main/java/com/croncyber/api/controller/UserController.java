@@ -1,45 +1,50 @@
 package com.croncyber.api.controller;
 
-import com.croncyber.api.dao.UsersDAO;
+import com.croncyber.api.dao.UserRepository;
 import com.croncyber.api.model.User;
-import com.croncyber.api.model.Users;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
+import java.util.Collection;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 
 
 @RestController
-@RequestMapping(path = "/users")
+@RequestMapping(path = "/users",
+        produces = APPLICATION_JSON_UTF8_VALUE)
 public class UserController {
-    private final UsersDAO usersDAO;
+    private final UserRepository userRepository;
 
-    public UserController(UsersDAO usersDAO) {
-        this.usersDAO = usersDAO;
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    @GetMapping(path="/", produces = "application/json")
-    public Users getUsers() {
-        return usersDAO.getAllUsers();
+    @GetMapping("/all")
+    public Collection<User> getById() {
+        return userRepository.getAll();
     }
 
-    @PostMapping (path= "/", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Object> addUser(@RequestBody User user){
-        //Generate resource id
-        Integer id = usersDAO.getAllUsers().getUserList().size() + 1;
-        user.setId(id);
+    @GetMapping("/{id}")
+    public User getByIdPath(@PathVariable("id") int id) {
+        return getUserById(id);
+    }
 
-        //add resource
-        usersDAO.addUser(user);
+    @GetMapping
+    public User getByIdParam(@RequestParam("userId") int id) {
+        return getUserById(id);
+    }
 
-        //Create resource location
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(user.getId())
-                .toUri();
+    @PostMapping(consumes = APPLICATION_JSON_UTF8_VALUE)
+    public void addUser(@RequestBody User user) {
+        userRepository.save(user);
+        System.out.println("User " + user + " has been saved");
+    }
 
-        //Send location in response
-        return ResponseEntity.created(location).build();
+    private User getUserById(@RequestParam("userId") int id) {
+        if (id == 5){
+            throw new RuntimeException("Bada yagodka opat!!!");
+        }
+        return userRepository.getById(id)
+                             .orElseThrow(() -> new RuntimeException("Idi nahuy suka, net takogo usera!!!"));
     }
 }
