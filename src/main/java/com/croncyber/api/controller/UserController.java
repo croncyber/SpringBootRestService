@@ -42,7 +42,7 @@ public class UserController {
 
     private User getUserById(@RequestParam("userId") int id) {
         if (id == 5){
-            throw new RuntimeException("Bada yagodka opat!!!");
+            throw new RuntimeException("Baba yagodka opat!!!");
         }
         return userRepository.getById(id)
                              .orElseThrow(() -> new RuntimeException("Idi nahuy suka, net takogo usera!!!"));
