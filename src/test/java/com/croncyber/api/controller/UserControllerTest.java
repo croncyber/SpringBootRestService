@@ -1,70 +1,101 @@
+/*
 package com.croncyber.api.controller;
 
-import com.croncyber.api.Application;
-import com.croncyber.api.dao.InMemoryUserRepository;
+import com.croncyber.api.repository.UserRepository;
 import com.croncyber.api.model.User;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class)
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class UserControllerTest {
-
-    //JsonPath jsonPath;
-   // String value = jsonPath.getString("blogs[0].posts[0].author.name");
-
-    @InjectMocks
-    private UserController userController = new UserController(new InMemoryUserRepository());
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @MockBean
+    private UserRepository userRepository;
 
     private MockMvc mockMvc;
 
     @Before
-    public void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
-       // jsonPath = new JsonPath(");
+    public void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
     @Test
-    public void testGetById() throws Exception {
-    mockMvc.perform(get("/users/all").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+    public void shouldGetByAllWhenNoUsersInRepository() {
+        //given
+        //initial state of the application
+        List<User> expectedResult = new ArrayList<>();
+        User user1 = new User(1, "Yura", "Lyavinec");
+        expectedResult.add(user1);
 
+        when(userRepository.getAll())
+                .thenReturn(expectedResult);
+        //when
+        //execution of the tested method and retrieving result
+        Collection<User> actualUsers = getAllUsers();
 
+        //then
+        //assert result
+        assertThat(actualUsers).containsExactlyInAnyOrderElementsOf(expectedResult);
+    }
+
+    private Collection<User> getAllUsers() {
+        try {
+            String contentAsString = mockMvc.perform(get("/users")
+                    .accept(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            return objectMapper.readValue(contentAsString, new TypeReference<List<User>>() {
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
-    @Ignore
+
     @Test
     public void testGetByIdPath() {
-        userController.getByIdPath(1);
     }
-
-    @Ignore
-    @Test
-    public void testGetByIdParam() {
-        userController.getByIdParam(4);
-
-    }
-
-    @Test
-    public void testAddUser() throws Exception {
-        System.out.println("start");
-        User user = new User(1, "Petro", "Bamper");
-        userController.addUser(user);
+//
+//    @Ignore
+//    @Test
+//    public void testGetByIdParam() {
+//        userController.getByIdParam(4);
+//
+//    }
+//
+//    @Test
+//    public void testAddUser() throws Exception {
+//        System.out.println("start");
+//        User user = new User(1, "Petro", "Bamper");
+//        userController.addUser(user);
 //        String inputJson = "{\n" +
 //                "  \"firstname\": \"Petro\",\n" +
 //                "  \"lastname\": \"Bamper\"\n" +
@@ -76,5 +107,5 @@ public class UserControllerTest {
 //                .
 //mvcResult.getResponse().
 //        assertEquals(, "User " + user.getLastName() + " has been saved");
-    }
-}
+
+}*/
